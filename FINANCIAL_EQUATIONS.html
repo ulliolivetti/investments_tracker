@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial Equations — Portfolio Tracker</title>
+<script>
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    tags: 'none'
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-secondary: #f8f7f4;
+    --bg-code: #f3f2ef;
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-mono: #2d5a8e;
+    --border: #e5e3dc;
+    --accent: #185fa5;
+    --accent-light: #e6f1fb;
+    --green: #3b6d11;
+    --green-light: #eaf3de;
+    --amber: #854f0b;
+    --amber-light: #faeeda;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1c1a; --bg-secondary: #242422; --bg-code: #2a2a28;
+      --text: #e8e6df; --text-muted: #999890; --text-mono: #85b7eb;
+      --border: #3a3a36; --accent: #85b7eb; --accent-light: #042c53;
+      --green: #97c459; --green-light: #173404;
+      --amber: #ef9f27; --amber-light: #412402;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 16px;
+    line-height: 1.75;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+  h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; letter-spacing: -0.02em; }
+  .subtitle { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2.5rem; font-style: italic; }
+  h2 { font-size: 1.35rem; font-weight: 700; margin: 3rem 0 1rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--border); }
+  h3 { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin: 1.5rem 0 0.5rem; }
+  p { margin-bottom: 0.9rem; }
+  ul, ol { padding-left: 1.5rem; margin-bottom: 0.9rem; }
+  li { margin-bottom: 0.3rem; }
+  hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+  .eq {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1rem 0 1.2rem;
+    overflow-x: auto;
+    text-align: center;
+    font-size: 1.05rem;
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    font-family: Menlo, Monaco, 'Courier New', monospace;
+    font-size: 0.83rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 0.8rem 0 1.2rem;
+    color: var(--text-mono);
+  }
+  code {
+    font-family: Menlo, Monaco, 'Courier New', monospace;
+    font-size: 0.85em;
+    background: var(--bg-code);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    color: var(--text-mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.2rem; font-size: 0.9rem; }
+  th { text-align: left; font-size: 0.72rem; letter-spacing: 0.07em; text-transform: uppercase; color: var(--text-muted); padding: 0.6rem 0.8rem; border-bottom: 2px solid var(--border); }
+  td { padding: 0.55rem 0.8rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .callout { border-left: 3px solid var(--accent); background: var(--accent-light); padding: 0.8rem 1rem; border-radius: 0 8px 8px 0; margin: 1rem 0; font-size: 0.92rem; }
+  .callout.warn { border-left-color: var(--amber); background: var(--amber-light); }
+  .callout.success { border-left-color: var(--green); background: var(--green-light); }
+  .verify { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.82rem; background: var(--green-light); color: var(--green); border: 1px solid var(--green); border-radius: 20px; padding: 0.2rem 0.7rem; margin: 0.3rem 0 0.8rem; font-family: Menlo, monospace; }
+  .toc { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; }
+  .toc h3 { margin-top: 0; }
+  .toc ol { margin-bottom: 0; }
+  .toc a { color: var(--accent); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .how-to { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+  .how-to ol { margin-bottom: 0; }
+  .stbl td:nth-child(3) { font-family: Menlo, monospace; font-size: 0.78rem; color: var(--text-muted); }
+  .stbl td:nth-child(4) { font-family: Menlo, monospace; font-size: 0.78rem; color: var(--text-mono); }
+</style>
+</head>
+<body>
+
+<h1>&#x1F4D0; Financial Equations</h1>
+<p class="subtitle">Portfolio Tracker &middot; Personal reference &mdash; every formula from the Excel spreadsheet, explained from first principles.<br>Written for someone with an engineering background who wants to understand the <em>why</em>, not just the <em>what</em>.</p>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#eq1">Average Purchase Price</a></li>
+    <li><a href="#eq2">Invested Value</a></li>
+    <li><a href="#eq3">Current Value</a></li>
+    <li><a href="#eq4">Unrealized Gain/Loss (&euro;)</a></li>
+    <li><a href="#eq5">Unrealized Gain/Loss (%)</a></li>
+    <li><a href="#eq6">Portfolio Weight</a></li>
+    <li><a href="#eq7">Dividend Yield</a></li>
+    <li><a href="#eq8">Required Yield</a></li>
+    <li><a href="#eq9">Buy Zone Price</a></li>
+    <li><a href="#eq10">Distance from Buy Zone</a></li>
+    <li><a href="#eq11">Weighted Portfolio Yield</a></li>
+    <li><a href="#eq12">Equal-Weight Yield</a></li>
+    <li><a href="#eq13">Daily Variation</a></li>
+    <li><a href="#eq14">Total Dividends Received</a></li>
+    <li><a href="#eq15">Dividend Contribution</a></li>
+    <li><a href="#eq16">Portfolio Cash Position</a></li>
+    <li><a href="#summary">Summary Table</a></li>
+  </ol>
+</div>
+
+<div class="how-to">
+  <h3>How to read this document</h3>
+  <p style="margin-top:0.5rem;margin-bottom:0.6rem;">Each equation is presented in four parts:</p>
+  <ol>
+    <li><strong>What it measures</strong> &mdash; the concept in plain English</li>
+    <li><strong>The formula</strong> &mdash; in mathematical notation</li>
+    <li><strong>Excel &rarr; Python translation</strong> &mdash; how it becomes code</li>
+    <li><strong>A concrete example</strong> &mdash; using real numbers from your spreadsheet</li>
+  </ol>
+</div>
+
+<hr>
+
+<!-- EQ 1 -->
+<h2 id="eq1">1. Average Purchase Price <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Pre&ccedil;o M&eacute;dio)</span></h2>
+
+<h3>What it measures</h3>
+<p>When you buy shares of the same company multiple times at different prices, this tells you the true average price you paid per share across all purchases. Think of it like averaging the unit price of materials bought in multiple batches on a construction project.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ \bar{P} = \frac{\sum_{i=1}^{n} (Q_i \cdot P_i)}{\sum_{i=1}^{n} Q_i} \]
+</div>
+<ul>
+  <li>\(Q_i\) = quantity bought in transaction \(i\)</li>
+  <li>\(P_i\) = price paid per share in transaction \(i\)</li>
+  <li>\(n\) = total number of buy transactions for this stock</li>
+</ul>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def average_price(transactions: list[dict]) -> float:
+    buys = [t for t in transactions if t["action"] == "Compra"]
+    total_cost = sum(t["quantity"] * t["price"] for t in buys)
+    total_quantity = sum(t["quantity"] for t in buys)
+    return total_cost / total_quantity if total_quantity > 0 else 0</pre>
+
+<h3>Concrete example &mdash; Coface (EPA:COFA)</h3>
+<table>
+  <tr><th>Transaction</th><th>Quantity</th><th>Price</th><th>Cost</th></tr>
+  <tr><td>Buy 1</td><td>7</td><td>&euro;14.88</td><td>&euro;104.16</td></tr>
+  <tr><td>Buy 2</td><td>6</td><td>&euro;14.838</td><td>&euro;89.03</td></tr>
+  <tr><td>Buy 3</td><td>6</td><td>&euro;15.371</td><td>&euro;92.23</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>19</strong></td><td></td><td><strong>&euro;285.42</strong></td></tr>
+</table>
+<div class="eq">
+  \[ \bar{P} = \frac{285.42}{19} = \textbf{15.02} \text{ EUR per share} \]
+</div>
+<div class="verify">&#x2713; Excel: Pre&ccedil;o m&eacute;dio = 15.02210526</div>
+<div class="callout">
+  <strong>Why it matters:</strong> Your average price is your personal break-even point. If the stock trades above this, you're in profit. Below, you're at a loss &mdash; even if the stock is objectively "up" since you started investing.
+</div>
+
+<hr>
+
+<!-- EQ 2 -->
+<h2 id="eq2">2. Invested Value <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Valor Comprado)</span></h2>
+
+<h3>What it measures</h3>
+<p>The total amount of real money you put into a stock. This is your cost basis &mdash; what you actually spent.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ V_{\mathrm{invested}} = Q_{\mathrm{total}} \times \bar{P} \]
+</div>
+<ul>
+  <li>\(Q_{\mathrm{total}}\) = total shares currently held</li>
+  <li>\(\bar{P}\) = average purchase price</li>
+</ul>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def invested_value(quantity: float, avg_price: float) -> float:
+    return quantity * avg_price</pre>
+
+<h3>Concrete example &mdash; Coface</h3>
+<div class="eq">
+  \[ V_{\mathrm{invested}} = 19 \times 15.02 = \textbf{285.42} \text{ EUR} \]
+</div>
+
+<hr>
+
+<!-- EQ 3 -->
+<h2 id="eq3">3. Current Value <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Valor Atual)</span></h2>
+
+<h3>What it measures</h3>
+<p>What your position is worth <em>right now</em> at market prices. This changes every second the market is open.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ V_{\mathrm{current}} = Q_{\mathrm{total}} \times P_{\mathrm{current}} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def current_value(quantity: float, current_price: float) -> float:
+    return quantity * current_price</pre>
+
+<h3>Concrete example &mdash; Coface</h3>
+<div class="eq">
+  \[ V_{\mathrm{current}} = 19 \times 16.45 = \textbf{312.55} \text{ EUR} \]
+</div>
+
+<hr>
+
+<!-- EQ 4 -->
+<h2 id="eq4">4. Unrealized Gain/Loss <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Valoriza&ccedil;&atilde;o &euro;)</span></h2>
+
+<h3>What it measures</h3>
+<p>The profit or loss on a position you <strong>still hold</strong>. It's called "unrealized" because it's not real money yet &mdash; you only realize it when you sell. Like owning land that has appreciated in value: you're richer on paper, but you only get the cash when you sell the land.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ G_{\mathrm{unrealized}} = V_{\mathrm{current}} - V_{\mathrm{invested}} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def unrealized_gain(current_value: float, invested_value: float) -> float:
+    return current_value - invested_value</pre>
+
+<h3>Concrete examples</h3>
+<p>Coface (gain):</p>
+<div class="eq">
+  \[ G_{\mathrm{unrealized}} = 312.55 - 285.42 = \textbf{+27.13} \text{ EUR} \]
+</div>
+<p>TFI &mdash; loss example:</p>
+<div class="eq">
+  \[ G_{\mathrm{unrealized}} = 102.00 - 107.53 = \textbf{-5.53} \text{ EUR} \]
+</div>
+
+<hr>
+
+<!-- EQ 5 -->
+<h2 id="eq5">5. Unrealized Gain Percentage <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Valoriza&ccedil;&atilde;o %)</span></h2>
+
+<h3>What it measures</h3>
+<p>The same gain expressed as a percentage of your original investment. This lets you compare performance across positions of different sizes &mdash; a &euro;27 gain on a &euro;285 investment is much more impressive than a &euro;27 gain on a &euro;2,850 investment.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ G_{\%} = \frac{V_{\mathrm{current}} - V_{\mathrm{invested}}}{V_{\mathrm{invested}}} \times 100 \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def unrealized_gain_percent(current_value: float, invested_value: float) -> float:
+    if invested_value == 0:
+        return 0
+    return (current_value - invested_value) / invested_value * 100</pre>
+
+<h3>Concrete example &mdash; Coface</h3>
+<div class="eq">
+  \[ G_{\%} = \frac{312.55 - 285.42}{285.42} \times 100 = \frac{27.13}{285.42} \times 100 = \textbf{+9.50\%} \]
+</div>
+<div class="verify">&#x2713; Excel: Valoriza&ccedil;&atilde;o % = 0.09505290449 (= 9.50%)</div>
+
+<hr>
+
+<!-- EQ 6 -->
+<h2 id="eq6">6. Portfolio Weight <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Peso da A&ccedil;&atilde;o)</span></h2>
+
+<h3>What it measures</h3>
+<p>What percentage of your total portfolio is concentrated in one stock. Civil engineering analogy: load distribution across columns &mdash; if one column carries 50% of the load, a failure there brings down the whole structure. Diversification means spreading the weight.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ W_i = \frac{V_{\mathrm{current},\,i}}{\displaystyle\sum_{j=1}^{n} V_{\mathrm{current},\,j}} \]
+</div>
+<p>Where \(i\) is one specific stock and the denominator is the sum of all current values across all \(n\) stocks.</p>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def portfolio_weights(holdings: list[dict]) -> dict:
+    total = sum(h["current_value"] for h in holdings)
+    return {
+        h["ticker"]: h["current_value"] / total
+        for h in holdings
+        if total > 0
+    }</pre>
+
+<h3>Concrete example</h3>
+<p>Total portfolio value = &euro;4,374.03</p>
+<table>
+  <tr><th>Stock</th><th>Current Value</th><th>Weight</th></tr>
+  <tr><td>S&amp;P 500 Amundi</td><td>&euro;966.28</td><td>22.09%</td></tr>
+  <tr><td>Small caps EUR</td><td>&euro;945.84</td><td>21.62%</td></tr>
+  <tr><td>Credit Agricole</td><td>&euro;596.36</td><td>13.63%</td></tr>
+  <tr><td>Pernod Ricard</td><td>&euro;649.20</td><td>14.84%</td></tr>
+  <tr><td>&hellip;</td><td>&hellip;</td><td>&hellip;</td></tr>
+</table>
+<div class="callout">
+  S&amp;P 500 + Small caps alone represent ~44% of the portfolio. That's a meaningful concentration in index funds rather than individual dividend stocks.
+</div>
+
+<hr>
+
+<!-- EQ 7 -->
+<h2 id="eq7">7. Dividend Yield <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Rendimento dos Dividendos)</span></h2>
+
+<h3>What it measures</h3>
+<p>The annual income you receive from a stock expressed as a percentage of its current price. If a stock pays &euro;2 per share and costs &euro;40, you get 5% of your investment back in cash every year &mdash; regardless of whether the stock price goes up or down. This is the core metric for a dividend investment strategy.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ Y_{\mathrm{div}} = \frac{D_{\mathrm{annual}}}{P_{\mathrm{current}}} \]
+</div>
+<ul>
+  <li>\(D_{\mathrm{annual}}\) = total dividends paid per share in the last 12 months (or next 12 months if forecasting)</li>
+  <li>\(P_{\mathrm{current}}\) = current market price per share</li>
+</ul>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def dividend_yield(annual_dividend_per_share: float, current_price: float) -> float:
+    if current_price == 0:
+        return 0
+    return annual_dividend_per_share / current_price</pre>
+
+<h3>Concrete examples</h3>
+<p>Coface (EPA:COFA):</p>
+<div class="eq">
+  \[ Y_{\mathrm{div}} = \frac{2.15}{16.45} = 0.1307 = \textbf{13.07\%} \]
+</div>
+<div class="verify">&#x2713; Excel: Rentabilidade atual estimada = 0.1306990881</div>
+<p>NOS (ELI:NOS):</p>
+<div class="eq">
+  \[ Y_{\mathrm{div}} = \frac{1.40}{5.26} = 0.2662 = \textbf{26.62\%} \]
+</div>
+<div class="callout warn">
+  <strong>Caution:</strong> A very high dividend yield (like NOS at 26%) can be a warning sign. It sometimes means the market expects the dividend to be cut, or the company is in trouble. The yield is high because the price has fallen, not because dividends increased. Always check the payout ratio and earnings.
+</div>
+
+<hr>
+
+<!-- EQ 8 -->
+<h2 id="eq8">8. Required Yield <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Rentabilidade Exigida)</span></h2>
+
+<h3>What it measures</h3>
+<p>The <strong>minimum</strong> dividend yield you accept before buying a stock. This is your personal filter &mdash; a strategic rule, not a calculation. Your spreadsheet uses <strong>6.5% for all stocks</strong>.</p>
+<p>This represents your opportunity cost. If a risk-free government bond pays ~3&ndash;4%, you need a meaningful premium to justify the risk of owning individual company stocks. 6.5% is a common threshold in dividend investing communities.</p>
+
+<h3>Excel &rarr; Python</h3>
+<pre>REQUIRED_YIELD_BY_COUNTRY = {
+    "FR": 0.065,   # France
+    "PT": 0.065,   # Portugal
+    # Future: could differentiate by country or sector
+}</pre>
+
+<hr>
+
+<!-- EQ 9 -->
+<h2 id="eq9">9. Buy Zone Price <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Zona de Compra)</span></h2>
+
+<h3>What it measures</h3>
+<p>The <strong>maximum price you should pay</strong> for a stock to guarantee your required yield. Derived by solving the dividend yield formula for price.</p>
+<p>Civil engineering analogy: the maximum bid on a public works tender &mdash; you calculate the maximum you can spend and still make the project financially viable.</p>
+
+<h3>Formula</h3>
+<p>Starting from the dividend yield formula and solving for \(P\):</p>
+<div class="eq">
+  \[ Y = \frac{D}{P} \implies P_{\mathrm{buy}} = \frac{D_{\mathrm{annual}}}{Y_{\mathrm{required}}} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def buy_zone_price(annual_dividend_per_share: float, required_yield: float) -> float:
+    if required_yield == 0:
+        return 0
+    return annual_dividend_per_share / required_yield</pre>
+
+<h3>Concrete examples</h3>
+<p>Coface &mdash; in the buy zone (current price &euro;16.45):</p>
+<div class="eq">
+  \[ P_{\mathrm{buy}} = \frac{2.15}{0.065} = \textbf{33.08} \text{ EUR} \quad \Rightarrow \text{ current } 16.45 < 33.08 \text{, IN zone} \]
+</div>
+<p>Amundi &mdash; not in the buy zone (current price &euro;87.25):</p>
+<div class="eq">
+  \[ P_{\mathrm{buy}} = \frac{4.25}{0.065} = \textbf{65.38} \text{ EUR} \quad \Rightarrow \text{ current } 87.25 > 65.38 \text{, NOT in zone} \]
+</div>
+<div class="callout success">
+  <strong>Rental property analogy:</strong> If you need 6.5% rental income and the annual rent is &euro;15,600, you should pay no more than &euro;15,600 &divide; 0.065 = &euro;240,000 for the property. Exact same logic.
+</div>
+
+<hr>
+
+<!-- EQ 10 -->
+<h2 id="eq10">10. Distance from Buy Zone <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Dist&acirc;ncia da Zona de Compra)</span></h2>
+
+<h3>What it measures</h3>
+<p>How far the current price is from the buy zone limit, as a percentage. Positive = inside the zone (cheap enough). Negative = outside (too expensive).</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ D_{\mathrm{zone}} = \frac{P_{\mathrm{buy}} - P_{\mathrm{current}}}{P_{\mathrm{current}}} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def distance_from_buy_zone(buy_zone_price: float, current_price: float) -> float:
+    if current_price == 0:
+        return 0
+    return (buy_zone_price - current_price) / current_price</pre>
+
+<h3>Concrete examples</h3>
+<p>Coface (IN zone):</p>
+<div class="eq">
+  \[ D_{\mathrm{zone}} = \frac{33.08 - 16.45}{16.45} = \frac{16.63}{16.45} = \textbf{+101.1\%} \]
+</div>
+<div class="verify">&#x2713; Excel: +1.010755202 (= +101.1%)</div>
+<p>Amundi (NOT in zone):</p>
+<div class="eq">
+  \[ D_{\mathrm{zone}} = \frac{65.38 - 87.25}{87.25} = \frac{-21.87}{87.25} = \textbf{-25.1\%} \]
+</div>
+<div class="verify">&#x2713; Excel: -0.2506061274 (= -25.1%)</div>
+<div class="callout">
+  A distance of +101% (Coface) means the stock would have to <em>double</em> in price before leaving the buy zone. A distance of -25% (Amundi) means the price needs to fall 25% before it becomes attractive.
+</div>
+
+<hr>
+
+<!-- EQ 11 -->
+<h2 id="eq11">11. Weighted Portfolio Yield <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Rendimento Ponderado)</span></h2>
+
+<h3>What it measures</h3>
+<p>The dividend yield of each stock adjusted by how much of your portfolio it represents. Gives a single percentage for the overall expected dividend income of your entire portfolio.</p>
+
+<h3>Formula &mdash; per stock</h3>
+<div class="eq">
+  \[ Y_{\mathrm{w},\,i} = Y_{\mathrm{div},\,i} \times W_i \]
+</div>
+
+<h3>Formula &mdash; portfolio total</h3>
+<div class="eq">
+  \[ Y_{\mathrm{portfolio}} = \sum_{i=1}^{n} Y_{\mathrm{w},\,i} = \sum_{i=1}^{n} \bigl( Y_{\mathrm{div},\,i} \times W_i \bigr) \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def portfolio_yield(holdings: list[dict]) -> float:
+    return sum(h["dividend_yield"] * h["weight"] for h in holdings)</pre>
+
+<h3>Concrete example &mdash; SCOR SE (EPA:SCR)</h3>
+<ul>
+  <li>Dividend yield: \(2.17 / 32.14 = 6.75\%\)</li>
+  <li>Portfolio weight: \(5.14\%\)</li>
+  <li>Weighted contribution: \(0.0675 \times 0.0514 = 0.347\%\)</li>
+</ul>
+<p>Total portfolio yield = <strong>4.30%</strong> &mdash; for every &euro;100 invested, you expect ~&euro;4.30 in dividends per year.</p>
+
+<hr>
+
+<!-- EQ 12 -->
+<h2 id="eq12">12. Equal-Weight Yield <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(M&eacute;dia Igual)</span></h2>
+
+<h3>What it measures</h3>
+<p>What your portfolio yield would be if you invested <strong>equally</strong> in all stocks. Compared to the actual weighted yield, this reveals whether your allocation is optimized for dividend income.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ Y_{\mathrm{equal}} = \frac{1}{n} \sum_{i=1}^{n} Y_{\mathrm{div},\,i} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def equal_weight_yield(holdings: list[dict]) -> float:
+    if not holdings:
+        return 0
+    return sum(h["dividend_yield"] for h in holdings) / len(holdings)</pre>
+
+<h3>Your Excel values</h3>
+<table>
+  <tr><th>Scenario</th><th>Yield</th></tr>
+  <tr><td>Actual portfolio yield (current weights)</td><td><strong>4.30%</strong></td></tr>
+  <tr><td>Equal-weight yield (all stocks same size)</td><td><strong>7.48%</strong></td></tr>
+  <tr><td>Equal-weight yield (buy-zone stocks only)</td><td><strong>8.50%</strong></td></tr>
+</table>
+<div class="callout warn">
+  Your actual yield (4.30%) is lower than the equal-weight yield (7.48%) because your largest positions (S&amp;P 500 ETF at 22%, Small caps at 21%) pay very low dividends. If you rebalanced toward the high-yield dividend stocks, your income would increase significantly.
+</div>
+
+<hr>
+
+<!-- EQ 13 -->
+<h2 id="eq13">13. Daily Variation <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Varia&ccedil;&atilde;o do Dia)</span></h2>
+
+<h3>What it measures</h3>
+<p>How much a stock moved today compared to yesterday's closing price, in both percentage and absolute euro terms.</p>
+
+<h3>Formula &mdash; percentage</h3>
+<div class="eq">
+  \[ \Delta_{\%} = \frac{P_{\mathrm{today}} - P_{\mathrm{yesterday}}}{P_{\mathrm{yesterday}}} \]
+</div>
+
+<h3>Formula &mdash; absolute (EUR)</h3>
+<div class="eq">
+  \[ \Delta_{\mathrm{EUR}} = P_{\mathrm{today}} - P_{\mathrm{yesterday}} = P_{\mathrm{today}} \times \Delta_{\%} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def daily_variation_percent(today: float, yesterday: float) -> float:
+    if yesterday == 0:
+        return 0
+    return (today - yesterday) / yesterday
+
+def daily_variation_eur(today: float, yesterday: float) -> float:
+    return today - yesterday</pre>
+
+<div class="callout">
+  These values come from a market data API (Yahoo Finance, etc.) &mdash; they are not calculated from your transaction history. The app fetches them live.
+</div>
+
+<hr>
+
+<!-- EQ 14 -->
+<h2 id="eq14">14. Total Dividends Received <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Dividendos Totais)</span></h2>
+
+<h3>What it measures</h3>
+<p>The cumulative cash income received from dividends since the portfolio was created &mdash; a simple sum of all dividend transactions.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ D_{\mathrm{total}} = \sum_{i \,\in\, \mathrm{Div}} T_i \]
+</div>
+<p>Where \(T_i\) is the total amount of each dividend transaction.</p>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def total_dividends(transactions: list[dict]) -> float:
+    return sum(
+        t["total"]
+        for t in transactions
+        if t["action"] == "Dividendos"
+    )</pre>
+
+<h3>Your numbers</h3>
+<table>
+  <tr><th>Stock</th><th>Dividends Received</th></tr>
+  <tr><td>TFI (EPA:TFI)</td><td>&euro;9.45</td></tr>
+  <tr><td>NOS (ELI:NOS)</td><td>&euro;4.97</td></tr>
+  <tr><td>SCOR SE (EPA:SCR)</td><td>&euro;13.30</td></tr>
+  <tr><td>Groupe M6 (EPA:MMT)</td><td>&euro;12.50</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>&euro;40.22</strong></td></tr>
+</table>
+
+<hr>
+
+<!-- EQ 15 -->
+<h2 id="eq15">15. Dividend Contribution <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(% Contribui&ccedil;&atilde;o)</span></h2>
+
+<h3>What it measures</h3>
+<p>What percentage of your total dividend income came from each stock. Tells you which stocks are actually working for you as income generators.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[ C_i = \frac{D_i}{D_{\mathrm{total}}} \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def dividend_contribution(stock_dividends: float, total_dividends: float) -> float:
+    if total_dividends == 0:
+        return 0
+    return stock_dividends / total_dividends</pre>
+
+<h3>Concrete example</h3>
+<table>
+  <tr><th>Stock</th><th>Dividends</th><th>Contribution</th></tr>
+  <tr><td>SCOR SE</td><td>&euro;13.30</td><td>33.1%</td></tr>
+  <tr><td>Groupe M6</td><td>&euro;12.50</td><td>31.1%</td></tr>
+  <tr><td>TFI</td><td>&euro;9.45</td><td>23.5%</td></tr>
+  <tr><td>NOS</td><td>&euro;4.97</td><td>12.4%</td></tr>
+  <tr><td><strong>Total</strong></td><td><strong>&euro;40.22</strong></td><td><strong>100%</strong></td></tr>
+</table>
+
+<hr>
+
+<!-- EQ 16 -->
+<h2 id="eq16">16. Portfolio Cash Position <span style="font-weight:400;color:var(--text-muted);font-size:1rem;">(Cash)</span></h2>
+
+<h3>What it measures</h3>
+<p>The uninvested cash in your brokerage account, derived entirely from transaction history: deposits and dividend payments add cash; purchases subtract it.</p>
+
+<h3>Formula</h3>
+<div class="eq">
+  \[
+    \mathrm{Cash} =
+    \sum_{\mathrm{dep}} T_i
+    + \sum_{\mathrm{sell}} T_i
+    + \sum_{\mathrm{div}} T_i
+    - \sum_{\mathrm{buy}} T_i
+    - \sum_{\mathrm{withdraw}} T_i
+  \]
+</div>
+
+<h3>Excel &rarr; Python</h3>
+<pre>def cash_balance(transactions: list[dict]) -> float:
+    cash_in  = {"Deposito", "Venda", "Dividendos"}
+    cash_out = {"Compra", "Retirada"}
+    balance = 0
+    for t in transactions:
+        if t["action"] in cash_in:
+            balance += t["total"]
+        elif t["action"] in cash_out:
+            balance -= t["total"]
+    return balance</pre>
+
+<h3>Your deposit history (updated)</h3>
+<table>
+  <tr><th>Date</th><th>Amount</th></tr>
+  <tr><td>27/02/2026</td><td>&euro;650.00</td></tr>
+  <tr><td>06/03/2026</td><td>&euro;650.00</td></tr>
+  <tr><td>12/03/2026</td><td>&euro;150.00</td></tr>
+  <tr><td>20/03/2026</td><td>&euro;600.00</td></tr>
+  <tr><td>07/04/2026</td><td>&euro;1,000.00</td></tr>
+  <tr><td>16/04/2026</td><td>&euro;50.00</td></tr>
+  <tr><td>11/05/2026</td><td>&euro;1,000.00</td></tr>
+  <tr><td><strong>Total deposited</strong></td><td><strong>&euro;4,100.00</strong></td></tr>
+</table>
+<p>Total spent on purchases: ~&euro;3,944 out &mdash; Result: <strong>+&euro;156</strong> uninvested cash (plus dividends received).</p>
+
+<hr>
+
+<!-- SUMMARY -->
+<h2 id="summary">Summary Table &mdash; All Equations</h2>
+
+<table class="stbl">
+  <tr><th>#</th><th>Equation</th><th>Formula</th><th>Service function</th></tr>
+  <tr><td>1</td><td>Average price</td><td>\(\sum(Q_i P_i) / \sum Q_i\)</td><td>average_price()</td></tr>
+  <tr><td>2</td><td>Invested value</td><td>\(Q \times \bar{P}\)</td><td>invested_value()</td></tr>
+  <tr><td>3</td><td>Current value</td><td>\(Q \times P_{\mathrm{current}}\)</td><td>current_value()</td></tr>
+  <tr><td>4</td><td>Unrealized gain (EUR)</td><td>\(V_{\mathrm{current}} - V_{\mathrm{invested}}\)</td><td>unrealized_gain()</td></tr>
+  <tr><td>5</td><td>Unrealized gain (%)</td><td>\((V_{\mathrm{current}} - V_{\mathrm{invested}}) / V_{\mathrm{invested}}\)</td><td>unrealized_gain_percent()</td></tr>
+  <tr><td>6</td><td>Portfolio weight</td><td>\(V_i / \sum V_j\)</td><td>portfolio_weights()</td></tr>
+  <tr><td>7</td><td>Dividend yield</td><td>\(D_{\mathrm{annual}} / P_{\mathrm{current}}\)</td><td>dividend_yield()</td></tr>
+  <tr><td>8</td><td>Required yield</td><td>Policy constant (6.5%)</td><td>REQUIRED_YIELD</td></tr>
+  <tr><td>9</td><td>Buy zone price</td><td>\(D_{\mathrm{annual}} / Y_{\mathrm{required}}\)</td><td>buy_zone_price()</td></tr>
+  <tr><td>10</td><td>Distance from buy zone</td><td>\((P_{\mathrm{buy}} - P_{\mathrm{current}}) / P_{\mathrm{current}}\)</td><td>distance_from_buy_zone()</td></tr>
+  <tr><td>11</td><td>Weighted portfolio yield</td><td>\(\sum (Y_{\mathrm{div},i} \times W_i)\)</td><td>portfolio_yield()</td></tr>
+  <tr><td>12</td><td>Equal-weight yield</td><td>\(\sum Y_{\mathrm{div},i} / n\)</td><td>equal_weight_yield()</td></tr>
+  <tr><td>13</td><td>Daily variation</td><td>\((P_{\mathrm{today}} - P_{\mathrm{yesterday}}) / P_{\mathrm{yesterday}}\)</td><td>from market API</td></tr>
+  <tr><td>14</td><td>Total dividends</td><td>\(\sum T_{\mathrm{div}}\)</td><td>total_dividends()</td></tr>
+  <tr><td>15</td><td>Dividend contribution</td><td>\(D_i / D_{\mathrm{total}}\)</td><td>dividend_contribution()</td></tr>
+  <tr><td>16</td><td>Cash balance</td><td>\(\sum T_{\mathrm{in}} - \sum T_{\mathrm{out}}\)</td><td>cash_balance()</td></tr>
+</table>
+
+</body>
+</html>
